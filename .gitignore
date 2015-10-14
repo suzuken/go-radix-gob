@@ -1,0 +1,4 @@
+.*
+!.git*
+prof.mem
+go-radix-gob.test
