@@ -6,21 +6,15 @@ This repository created for testing [armon/go-radix](https://github.com/armon/go
 
 testing on MBP 2015 early, Mavericks.
 
-### 1,000,000 nodes
-
--> % go run cmd/main.go -loadpath test_million.tsv -exportpath test_million.gob
-build tree from tsv in 0.77035 seconds
-build tree from gob in 0.27564 seconds
-
-file size
-
-40M test_million.gob
-31M test_million.tsv
-
-### 10,000,000 nodes
-
-401M test_10million.gob
-305M test_10million.tsv
+	$ go test -v -run=^$ -bench=. -benchtime=10s
+	PASS
+	BenchmarkBuildTree10000-8               20000000               746 ns/op            4160 B/op           3 allocs/op
+	BenchmarkBuildTree100000-8              10000000              1289 ns/op            4163 B/op           3 allocs/op
+	BenchmarkBuildTree1000000-8             j10000000             1060 ns/op            4198 B/op           4 allocs/op
+	BenchmarkBuildTreeFromGob10000-8        20000000               635 ns/op             296 B/op           6 allocs/op
+	BenchmarkBuildTreeFromGob100000-8       20000000               692 ns/op             302 B/op           6 allocs/op
+	BenchmarkBuildTreeFromGob1000000-8       3000000              3825 ns/op             771 B/op          16 allocs/op
+	ok      github.com/suzuken/go-radix-gob 305.006s
 
 ## LICENSE
 
