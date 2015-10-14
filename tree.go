@@ -41,6 +41,17 @@ func BuildTreeFromFile(path string) (*radix.Tree, error) {
 	return BuildTree(fp)
 }
 
+// BuildTreeFromGob creates tree from gob. It's include map structure of tree.
+func BuildTreeFromGob(r io.Reader) (*radix.Tree, error) {
+	// buffering mapped radix.tree
+	var b map[string]interface{}
+	dec := gob.NewDecoder(r)
+	if err := dec.Decode(&b); err != nil {
+		return nil, err
+	}
+	return radix.NewFromMap(b), nil
+}
+
 // LoadTreeFromGobFile creates tree by gob file.
 func LoadTreeFromGobFile(path string) (*radix.Tree, error) {
 	fp, err := os.Open(path)
@@ -48,14 +59,7 @@ func LoadTreeFromGobFile(path string) (*radix.Tree, error) {
 		return nil, err
 	}
 	defer fp.Close()
-
-	// buffering mapped radix.tree
-	var b map[string]interface{}
-	dec := gob.NewDecoder(fp)
-	if err := dec.Decode(&b); err != nil {
-		return nil, err
-	}
-	return radix.NewFromMap(b), nil
+	return BuildTreeFromGob(fp)
 }
 
 // ExportTreeToGobFile exports tree as gob file.

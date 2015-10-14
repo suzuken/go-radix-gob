@@ -1,6 +1,11 @@
 package tree
 
 import (
+	"bytes"
+	"encoding/gob"
+	"github.com/armon/go-radix"
+	"github.com/suzuken/dummy"
+	"io"
 	"os"
 	"reflect"
 	"strings"
@@ -55,16 +60,54 @@ func TestExportAndLoadTree(t *testing.T) {
 	}
 }
 
-func BenchmarkBuildTree(b *testing.B) {
+// genTreeTSV generate tsv for building tree.
+func genTreeTSV(length, keyLen, valueLen int) io.Reader {
+	g := dummy.NewGenerator()
+	var buf bytes.Buffer
+	for i := 0; i < length; i++ {
+		buf.WriteString(g.String(keyLen))
+		buf.WriteString("\t")
+		buf.WriteString(g.String(valueLen))
+		buf.WriteString("\n")
+	}
+	return &buf
+}
+
+func benchmarkBuildTree(length int, b *testing.B) {
 	b.ReportAllocs()
 
-	r := strings.NewReader(strings.Join([]string{
-		"hoge	1",
-		"fuga	2",
-		"kuke	3",
-	}, "\n"))
-
+	r := genTreeTSV(length, 10, 3)
 	for i := 0; i < b.N; i++ {
 		BuildTree(r)
 	}
 }
+
+func BenchmarkBuildTree10000(b *testing.B)   { benchmarkBuildTree(10000, b) }
+func BenchmarkBuildTree100000(b *testing.B)  { benchmarkBuildTree(100000, b) }
+func BenchmarkBuildTree1000000(b *testing.B) { benchmarkBuildTree(1000000, b) }
+
+// genTree generate radix.Tree which has specified length
+func genTree(length, keyLen, valueLen int) *radix.Tree {
+	g := dummy.NewGenerator()
+	t := radix.New()
+	for i := 0; i < length; i++ {
+		t.Insert(g.String(keyLen), g.String(valueLen))
+	}
+	return t
+}
+
+func benchmarkBuildTreeFromGob(length int, b *testing.B) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(genTree(length, 10, 3).ToMap()); err != nil {
+		b.Fatalf("encode err: %s", err)
+	}
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		BuildTreeFromGob(&buf)
+	}
+}
+
+func BenchmarkBuildTreeFromGob10000(b *testing.B)   { benchmarkBuildTreeFromGob(10000, b) }
+func BenchmarkBuildTreeFromGob100000(b *testing.B)  { benchmarkBuildTreeFromGob(100000, b) }
+func BenchmarkBuildTreeFromGob1000000(b *testing.B) { benchmarkBuildTreeFromGob(1000000, b) }
